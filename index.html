@@ -79,7 +79,6 @@
             word-break: break-word;
         }
 
-        /* Canvas Wrapper without border box */
         .canvas-wrapper {
             width: 100%;
             display: flex;
@@ -213,16 +212,33 @@
         .copy-link-btn { background-color: #3f3f46; }
         .copy-link-btn:hover { background-color: #52525b; }
 
-        .qr-container {
+        .qr-section {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
             margin-top: 12px;
+        }
+
+        .qr-container {
             background: white;
             padding: 10px;
             border-radius: 8px;
-            width: fit-content;
-            margin-left: auto;
-            margin-right: auto;
+            display: inline-block;
+        }
+
+        .download-qr-btn {
+            background: #3f3f46;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .download-qr-btn:hover {
+            background: #52525b;
         }
     </style>
 </head>
@@ -239,7 +255,6 @@
                 <p id="greetingMessage">Alex made this heart for you: "Just wanted to make you smile today!"</p>
             </div>
 
-            <!-- Box removed, canvas renders freely -->
             <div class="canvas-wrapper">
                 <canvas id="heartCanvas" width="380" height="300"></canvas>
             </div>
@@ -282,8 +297,11 @@
                     </button>
                 </div>
 
-                <p style="margin-top: 15px; margin-bottom: 5px;">Scan QR Code:</p>
-                <div class="qr-container" id="qrcode"></div>
+                <p style="margin-top: 15px; margin-bottom: 5px;">Scan or Download QR Code:</p>
+                <div class="qr-section">
+                    <div class="qr-container" id="qrcode"></div>
+                    <button id="downloadQrBtn" class="download-qr-btn">📥 Download QR Code</button>
+                </div>
             </div>
         </div>
     </div>
@@ -408,14 +426,36 @@
             qrContainer.innerHTML = '';
             qrCodeInstance = new QRCode(qrContainer, {
                 text: fullLink,
-                width: 140,
-                height: 140,
+                width: 150,
+                height: 150,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
 
             document.getElementById('shareBox').style.display = 'block';
+        });
+
+        // Download QR code logic
+        document.getElementById('downloadQrBtn').addEventListener('click', () => {
+            const qrImg = document.querySelector('#qrcode img') || document.querySelector('#qrcode canvas');
+            if (!qrImg) return;
+
+            let imageUrl = '';
+            if (qrImg.tagName === 'CANVAS') {
+                imageUrl = qrImg.toDataURL('image/png');
+            } else if (qrImg.tagName === 'IMG') {
+                imageUrl = qrImg.src;
+            }
+
+            if (imageUrl) {
+                const downloadLink = document.createElement('a');
+                downloadLink.href = imageUrl;
+                downloadLink.download = 'heart-surpise-qr.png';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            }
         });
 
         document.getElementById('copyBtn').addEventListener('click', () => {
