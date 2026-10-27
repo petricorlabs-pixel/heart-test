@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A little love, drawn line by line.</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0b0b0e;
+            color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+        }
+
+        .main-wrapper {
+            width: 100%;
+            max-width: 520px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: #16161a;
+            border: 1px solid #27272a;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            text-align: center;
+            color: #fca5a5;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        /* Preview / Receiver Section (Always on Top) */
+        .greeting-card {
+            margin-bottom: 15px;
+        }
+
+        .greeting-card h2 {
+            font-size: 1.2rem;
+            color: #ffffff;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .greeting-card p {
+            font-size: 0.9rem;
+            color: #d1d5db;
+            line-height: 1.4;
+            background: #232329;
+            padding: 12px;
+            border-radius: 10px;
+            border-left: 3px solid #ef4444;
+            text-align: left;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 360px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0d0d11;
+            border-radius: 14px;
+            border: 1px solid #27272a;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .secondary-btn {
+            flex: 1;
+            padding: 10px;
+            background: #232329;
+            border: 1px solid #3f3f46;
+            color: #d1d5db;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .secondary-btn:hover {
+            background: #2f2f38;
+            color: #fff;
+        }
+
+        /* Form Section (Below) */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #d1d5db;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px 14px;
+            background: #232329;
+            border: 1px solid #3f3f46;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #fca5a5;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #ef4444, #f43f5e);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .share-box {
+            margin-top: 15px;
+            background: #232329;
+            border: 1px dashed #3f3f46;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .share-box p {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        .share-link-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .share-link-row input {
+            background: #16161a;
+            font-size: 0.8rem;
+            color: #fca5a5;
+        }
+
+        .share-link-row button {
+            width: 90px;
+            margin-top: 0;
+            background: #3f3f46;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        <!-- TOP: LIVE PREVIEW & ANIMATION CARD -->
+        <div class="card" id="previewCard">
+            <h1 id="topTitle">A little love, drawn line by line.</h1>
+            <p class="subtitle" id="topSubtitle">Watch your custom heart being drawn in real time.</p>
+            
+            <div class="greeting-card">
+                <h2 id="greetingTitle">Hello Sarah!</h2>
+                <p id="greetingMessage">Alex made this heart for you: "Just wanted to make you smile today!"</p>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="heartCanvas" width="400" height="360"></canvas>
+            </div>
+
+            <div class="controls-row">
+                <button class="secondary-btn" id="replayBtn">🔄 Replay Drawing</button>
+            </div>
+        </div>
+
+        <!-- BOTTOM: CUSTOMIZER FORM CARD -->
+        <div class="card" id="formCard">
+            <h2 style="font-size: 1.1rem; color: #fff; margin-bottom: 15px;">Customize Your Message</h2>
+            
+            <div class="form-group">
+                <label for="toName">Receiver's Name</label>
+                <input type="text" id="toName" value="Sarah" placeholder="e.g. Sarah">
+            </div>
+
+            <div class="form-group">
+                <label for="fromName">Your Name</label>
+                <input type="text" id="fromName" value="Alex" placeholder="e.g. Alex">
+            </div>
+
+            <div class="form-group">
+                <label for="msgText">Small Message</label>
+                <textarea id="msgText" placeholder="e.g. Just wanted to make you smile today!">Just wanted to make you smile today!</textarea>
+            </div>
+
+            <button class="btn" id="generateBtn">Generate Shareable Link</button>
+
+            <div class="share-box" id="shareBox">
+                <p>Link created! Copy and send it:</p>
+                <div class="share-link-row">
+                    <input type="text" id="shareUrl" readonly>
+                    <button class="btn" id="copyBtn">Copy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const toInput = document.getElementById('toName');
+        const fromInput = document.getElementById('fromName');
+        const msgInput = document.getElementById('msgText');
+
+        const greetingTitle = document.getElementById('greetingTitle');
+        const greetingMessage = document.getElementById('greetingMessage');
+        const formCard = document.getElementById('formCard');
+        const topSubtitle = document.getElementById('topSubtitle');
+
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Check if data is embedded in the URL hash (#data=...)
+        function loadFromHash() {
+            if (window.location.hash.includes('data=')) {
+                try {
+                    const base64Data = window.location.hash.split('data=')[1];
+                    const jsonString = decodeURIComponent(escape(atob(base64Data)));
+                    const data = JSON.parse(jsonString);
+
+                    if (data.to) toInput.value = data.to;
+                    if (data.from) fromInput.value = data.from;
+                    if (data.msg) msgInput.value = data.msg;
+
+                    // Hide form for recipient view
+                    formCard.style.display = 'none';
+                    topSubtitle.innerText = 'A special message sent just for you.';
+                } catch (e) {
+                    console.error('Failed to parse link data', e);
+                }
+            }
+        }
+
+        function updateGreeting() {
+            const to = toInput.value.trim() || 'there';
+            const from = fromInput.value.trim() || 'Someone special';
+            const msg = msgInput.value.trim() || 'Thinking of you!';
+
+            greetingTitle.innerText = `Hello ${to}!`;
+            greetingMessage.innerText = `${from} made this heart for you: "${msg}"`;
+        }
+
+        // Exact parametric heart formula scaled safely for the canvas
+        function getHeartPoint(n, scale) {
+            const x = 15 * Math.pow(Math.sin(n), 3);
+            const y = 12 * Math.cos(n) - 5 * Math.cos(2*n) - 2 * Math.cos(3*n) - Math.cos(4*n);
+            return {
+                x: canvas.width / 2 + x * scale * 0.9,
+                y: canvas.height / 2 - y * scale * 0.9
+            };
+        }
+
+        let animationId = null;
+
+        function runHeartDrawing() {
+            if (animationId) cancelAnimationFrame(animationId);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let i = 1; 
+            let j = 0;
+            const maxI = 15;
+            const maxJ = 100;
+
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            function drawStep() {
+                for (let step = 0; step < 4; step++) {
+                    if (i > maxI) return;
+
+                    const n = j / 15;
+                    const pt = getHeartPoint(n, i);
+
+                    if (j === 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(pt.x, pt.y);
+                    } else {
+                        ctx.lineTo(pt.x, pt.y);
+                        ctx.stroke();
+                    }
+
+                    j++;
+                    if (j >= maxJ) {
+                        j = 0;
+                        i++;
+                    }
+                }
+                animationId = requestAnimationFrame(drawStep);
+            }
+
+            drawStep();
+        }
+
+        // Live typing listeners
+        toInput.addEventListener('input', updateGreeting);
+        fromInput.addEventListener('input', updateGreeting);
+        msgInput.addEventListener('input', updateGreeting);
+
+        document.getElementById('replayBtn').addEventListener('click', runHeartDrawing);
+
+        // Link generator using safe Hash encoding (works even locally)
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            const data = {
+                to: toInput.value.trim(),
+                from: fromInput.value.trim(),
+                msg: msgInput.value.trim()
+            };
+
+            const jsonString = JSON.stringify(data);
+            const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
+            
+            // Build base URL without existing hash
+            const baseUrl = window.location.href.split('#')[0];
+            const fullLink = `${baseUrl}#data=${base64Data}`;
+
+            document.getElementById('shareUrl').value = fullLink;
+            document.getElementById('shareBox').style.display = 'block';
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const input = document.getElementById('shareUrl');
+            input.select();
+            navigator.clipboard.writeText(input.value);
+            document.getElementById('copyBtn').innerText = 'Copied!';
+            setTimeout(() => document.getElementById('copyBtn').innerText = 'Copy', 2000);
+        });
+
+        // Initialize
+        loadFromHash();
+        updateGreeting();
+        runHeartDrawing();
+    </script>
+</body>
+</html>
