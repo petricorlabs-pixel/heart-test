@@ -79,22 +79,18 @@
             word-break: break-word;
         }
 
-        .canvas-container {
-            position: relative;
+        /* Canvas Wrapper without border box */
+        .canvas-wrapper {
             width: 100%;
-            height: 320px;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #0d0d11;
-            border-radius: 14px;
-            border: 1px solid #27272a;
-            overflow: hidden;
             margin-bottom: 15px;
         }
 
         canvas {
             display: block;
+            background: transparent;
         }
 
         .controls-row {
@@ -243,8 +239,9 @@
                 <p id="greetingMessage">Alex made this heart for you: "Just wanted to make you smile today!"</p>
             </div>
 
-            <div class="canvas-container">
-                <canvas id="heartCanvas" width="380" height="320"></canvas>
+            <!-- Box removed, canvas renders freely -->
+            <div class="canvas-wrapper">
+                <canvas id="heartCanvas" width="380" height="300"></canvas>
             </div>
 
             <div class="controls-row">
@@ -304,7 +301,6 @@
         const canvas = document.getElementById('heartCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Check if data is embedded in URL hash
         function loadFromHash() {
             if (window.location.hash.includes('data=')) {
                 try {
@@ -333,13 +329,12 @@
             greetingMessage.innerText = `${from} made this heart for you: "${msg}"`;
         }
 
-        // Adjusted scaling factor (0.65) so all 16 concentric layers fit safely inside the container box
         function getHeartPoint(n, scale) {
             const x = 15 * Math.pow(Math.sin(n), 3);
             const y = 12 * Math.cos(n) - 5 * Math.cos(2*n) - 2 * Math.cos(3*n) - Math.cos(4*n);
             return {
-                x: canvas.width / 2 + x * scale * 0.65,
-                y: canvas.height / 2 - y * scale * 0.65
+                x: canvas.width / 2 + x * scale * 0.35,
+                y: canvas.height / 2 - y * scale * 0.35
             };
         }
 
@@ -394,7 +389,6 @@
 
         let qrCodeInstance = null;
 
-        // Generate Link, WhatsApp Share URL, and QR Code
         document.getElementById('generateBtn').addEventListener('click', () => {
             const data = {
                 to: toInput.value.trim(),
@@ -407,11 +401,9 @@
             const baseUrl = window.location.href.split('#')[0];
             const fullLink = `${baseUrl}#data=${base64Data}`;
 
-            // Set WhatsApp share link
             const waText = encodeURIComponent(`I made a little something for you, check it out here: ${fullLink}`);
             document.getElementById('whatsappShareBtn').href = `https://api.whatsapp.com/send?text=${waText}`;
 
-            // Generate QR Code
             const qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = '';
             qrCodeInstance = new QRCode(qrContainer, {
@@ -442,7 +434,6 @@
             setTimeout(() => document.getElementById('copyBtn').innerText = '📋 Copy Link', 2000);
         });
 
-        // Initialize
         loadFromHash();
         updateGreeting();
         runHeartDrawing();
