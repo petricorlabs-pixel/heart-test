@@ -405,8 +405,7 @@
 
         document.getElementById('replayBtn').addEventListener('click', runHeartDrawing);
 
-        let qrCodeInstance = null;
-
+        // Generate Link, WhatsApp Share URL, and QR Code
         document.getElementById('generateBtn').addEventListener('click', () => {
             const data = {
                 to: toInput.value.trim(),
@@ -424,10 +423,12 @@
 
             const qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = '';
-            qrCodeInstance = new QRCode(qrContainer, {
+            
+            // Generate QR code using qrcode.js
+            new QRCode(qrContainer, {
                 text: fullLink,
-                width: 150,
-                height: 150,
+                width: 160,
+                height: 160,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
@@ -436,25 +437,27 @@
             document.getElementById('shareBox').style.display = 'block';
         });
 
-        // Download QR code logic
+        // Fixed Download QR code handler
         document.getElementById('downloadQrBtn').addEventListener('click', () => {
-            const qrImg = document.querySelector('#qrcode img') || document.querySelector('#qrcode canvas');
-            if (!qrImg) return;
+            const qrCanvas = document.querySelector('#qrcode canvas');
+            const qrImg = document.querySelector('#qrcode img');
 
             let imageUrl = '';
-            if (qrImg.tagName === 'CANVAS') {
-                imageUrl = qrImg.toDataURL('image/png');
-            } else if (qrImg.tagName === 'IMG') {
+            if (qrCanvas) {
+                imageUrl = qrCanvas.toDataURL('image/png');
+            } else if (qrImg) {
                 imageUrl = qrImg.src;
             }
 
             if (imageUrl) {
                 const downloadLink = document.createElement('a');
                 downloadLink.href = imageUrl;
-                downloadLink.download = 'heart-surpise-qr.png';
+                downloadLink.download = 'heart-surprise-qr.png';
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
                 document.body.removeChild(downloadLink);
+            } else {
+                alert('Please generate the link and QR code first!');
             }
         });
 
