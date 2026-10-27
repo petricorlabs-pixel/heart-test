@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A little love, drawn line by line.</title>
+    <!-- Lightweight QR Code generator library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -53,7 +55,7 @@
             margin-bottom: 20px;
         }
 
-        /* Preview / Receiver Section (Always on Top) */
+        /* Greeting Section */
         .greeting-card {
             margin-bottom: 15px;
         }
@@ -74,12 +76,13 @@
             border-radius: 10px;
             border-left: 3px solid #ef4444;
             text-align: left;
+            word-break: break-word;
         }
 
         .canvas-container {
             position: relative;
             width: 100%;
-            height: 360px;
+            height: 320px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -114,7 +117,7 @@
             color: #fff;
         }
 
-        /* Form Section (Below) */
+        /* Form Section */
         .form-group {
             margin-bottom: 14px;
         }
@@ -174,32 +177,56 @@
             margin-top: 15px;
             background: #232329;
             border: 1px dashed #3f3f46;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 15px;
+            border-radius: 12px;
             display: none;
+            text-align: center;
         }
 
         .share-box p {
             font-size: 0.8rem;
             color: #9ca3af;
-            margin-bottom: 6px;
+            margin-bottom: 10px;
         }
 
-        .share-link-row {
-            display: flex;
+        .share-buttons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 8px;
+            margin-bottom: 12px;
         }
 
-        .share-link-row input {
-            background: #16161a;
-            font-size: 0.8rem;
-            color: #fca5a5;
+        .social-share-btn {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
         }
 
-        .share-link-row button {
-            width: 90px;
-            margin-top: 0;
-            background: #3f3f46;
+        .whatsapp-btn { background-color: #25d366; }
+        .whatsapp-btn:hover { background-color: #22bf5b; }
+
+        .copy-link-btn { background-color: #3f3f46; }
+        .copy-link-btn:hover { background-color: #52525b; }
+
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 12px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
         }
     </style>
 </head>
@@ -217,7 +244,7 @@
             </div>
 
             <div class="canvas-container">
-                <canvas id="heartCanvas" width="400" height="360"></canvas>
+                <canvas id="heartCanvas" width="380" height="320"></canvas>
             </div>
 
             <div class="controls-row">
@@ -244,14 +271,22 @@
                 <textarea id="msgText" placeholder="e.g. Just wanted to make you smile today!">Just wanted to make you smile today!</textarea>
             </div>
 
-            <button class="btn" id="generateBtn">Generate Shareable Link</button>
+            <button class="btn" id="generateBtn">Generate Shareable Link & QR</button>
 
             <div class="share-box" id="shareBox">
-                <p>Link created! Copy and send it:</p>
-                <div class="share-link-row">
-                    <input type="text" id="shareUrl" readonly>
-                    <button class="btn" id="copyBtn">Copy</button>
+                <p>✨ Share your heart link:</p>
+                
+                <div class="share-buttons-grid">
+                    <a id="whatsappShareBtn" class="social-share-btn whatsapp-btn" target="_blank">
+                        🟢 WhatsApp
+                    </a>
+                    <button id="copyBtn" class="social-share-btn copy-link-btn">
+                        📋 Copy Link
+                    </button>
                 </div>
+
+                <p style="margin-top: 15px; margin-bottom: 5px;">Scan QR Code:</p>
+                <div class="qr-container" id="qrcode"></div>
             </div>
         </div>
     </div>
@@ -269,7 +304,7 @@
         const canvas = document.getElementById('heartCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Check if data is embedded in the URL hash (#data=...)
+        // Check if data is embedded in URL hash
         function loadFromHash() {
             if (window.location.hash.includes('data=')) {
                 try {
@@ -281,7 +316,6 @@
                     if (data.from) fromInput.value = data.from;
                     if (data.msg) msgInput.value = data.msg;
 
-                    // Hide form for recipient view
                     formCard.style.display = 'none';
                     topSubtitle.innerText = 'A special message sent just for you.';
                 } catch (e) {
@@ -299,13 +333,13 @@
             greetingMessage.innerText = `${from} made this heart for you: "${msg}"`;
         }
 
-        // Exact parametric heart formula scaled safely for the canvas
+        // Adjusted scaling factor (0.65) so all 16 concentric layers fit safely inside the container box
         function getHeartPoint(n, scale) {
             const x = 15 * Math.pow(Math.sin(n), 3);
             const y = 12 * Math.cos(n) - 5 * Math.cos(2*n) - 2 * Math.cos(3*n) - Math.cos(4*n);
             return {
-                x: canvas.width / 2 + x * scale * 0.9,
-                y: canvas.height / 2 - y * scale * 0.9
+                x: canvas.width / 2 + x * scale * 0.65,
+                y: canvas.height / 2 - y * scale * 0.65
             };
         }
 
@@ -352,14 +386,15 @@
             drawStep();
         }
 
-        // Live typing listeners
         toInput.addEventListener('input', updateGreeting);
         fromInput.addEventListener('input', updateGreeting);
         msgInput.addEventListener('input', updateGreeting);
 
         document.getElementById('replayBtn').addEventListener('click', runHeartDrawing);
 
-        // Link generator using safe Hash encoding (works even locally)
+        let qrCodeInstance = null;
+
+        // Generate Link, WhatsApp Share URL, and QR Code
         document.getElementById('generateBtn').addEventListener('click', () => {
             const data = {
                 to: toInput.value.trim(),
@@ -369,21 +404,42 @@
 
             const jsonString = JSON.stringify(data);
             const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
-            
-            // Build base URL without existing hash
             const baseUrl = window.location.href.split('#')[0];
             const fullLink = `${baseUrl}#data=${base64Data}`;
 
-            document.getElementById('shareUrl').value = fullLink;
+            // Set WhatsApp share link
+            const waText = encodeURIComponent(`I made a little something for you, check it out here: ${fullLink}`);
+            document.getElementById('whatsappShareBtn').href = `https://api.whatsapp.com/send?text=${waText}`;
+
+            // Generate QR Code
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            qrCodeInstance = new QRCode(qrContainer, {
+                text: fullLink,
+                width: 140,
+                height: 140,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
             document.getElementById('shareBox').style.display = 'block';
         });
 
         document.getElementById('copyBtn').addEventListener('click', () => {
-            const input = document.getElementById('shareUrl');
-            input.select();
-            navigator.clipboard.writeText(input.value);
-            document.getElementById('copyBtn').innerText = 'Copied!';
-            setTimeout(() => document.getElementById('copyBtn').innerText = 'Copy', 2000);
+            const data = {
+                to: toInput.value.trim(),
+                from: fromInput.value.trim(),
+                msg: msgInput.value.trim()
+            };
+            const jsonString = JSON.stringify(data);
+            const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
+            const baseUrl = window.location.href.split('#')[0];
+            const fullLink = `${baseUrl}#data=${base64Data}`;
+
+            navigator.clipboard.writeText(fullLink);
+            document.getElementById('copyBtn').innerText = '✅ Copied!';
+            setTimeout(() => document.getElementById('copyBtn').innerText = '📋 Copy Link', 2000);
         });
 
         // Initialize
